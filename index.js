@@ -9,6 +9,7 @@ const userRouter = require('./routers/user');
 const bookmarkRouter = require('./routers/bookmark');
 const chatRouter = require('./routers/chat');
 const messageRouter = require('./routers/message');
+const jobcategoriesRouter = require('./routers/jobcategories');
 const bodyParser = require('body-parser');
 const path = require('path');
 
@@ -41,6 +42,8 @@ app.use('/api/bookmarks', bookmarkRouter);
 app.use('/api/chats', chatRouter);
 
 app.use('/api/messages', messageRouter);
+
+app.use('/api/jobcategories', jobcategoriesRouter);
 
 // Phục vụ file tĩnh từ thư mục "public"
 app.use(express.static(path.join(__dirname, 'public')));
