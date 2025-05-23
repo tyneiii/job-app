@@ -11,7 +11,7 @@ module.exports = {
             const newJob = new Job(req.body);
             const savedJob = await newJob.save();
             const { __v, createdAt, updatedAt, ...newJobInfo } = savedJob._doc;
-            
+
             res.status(201).json(newJobInfo);
         }
         catch (error) {
@@ -23,7 +23,7 @@ module.exports = {
         try {
             const updatedJob = await Job.findByIdAndUpdate(
                 req.params.id,
-                { $set: req.body }, 
+                { $set: req.body },
                 { new: true }
             );
 
@@ -86,20 +86,36 @@ module.exports = {
         try {
             const results = await Job.aggregate([
                 {
-                  $search: {
-                    index: "jobsearch",
-                    text: {
-                      query: req.params.key,
-                      path: {
-                        wildcard: "*"
-                      }
+                    $search: {
+                        index: "jobsearch",
+                        text: {
+                            query: req.params.key,
+                            path: {
+                                wildcard: "*"
+                            }
+                        }
                     }
-                  }
                 }
-              ])
-              res.status(200).json(results);
+            ])
+            res.status(200).json(results);
         }
         catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    getJobsByCategory: async (req, res) => {
+        try {
+            const categoryId = req.params.categoryId;
+
+            const jobs = await Job.find({ categoryId }).populate('categoryId', 'title');
+
+            if (jobs.length === 0) {
+                return res.status(404).json({ message: "No jobs found for this category" });
+            }
+
+            res.status(200).json(jobs);
+        } catch (error) {
             res.status(500).json({ message: error.message });
         }
     },

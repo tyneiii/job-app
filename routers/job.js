@@ -16,4 +16,6 @@ router.get('/', jobController.getAllJobs);
 
 router.get('/company/:uid', jobController.getCompanyJobs);
 
+router.get('/category/:categoryId', jobController.getJobsByCategory);
+
 module.exports = router;
