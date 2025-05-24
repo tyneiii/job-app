@@ -4,6 +4,6 @@ const chatController = require('../controllers/chatController');
 
 router.post('/', verifyAndAuth, chatController.accessChat);
 
-router.get('/:id', verifyAndAuth, chatController.getChat);
+router.get('/', verifyAndAuth, chatController.getChat);
 
 module.exports = router;
