@@ -10,6 +10,7 @@ module.exports = {
         }
 
         try {
+            // Tìm chat riêng (1-1 chat) giữa 2 user
             let chat = await Chat.find({
                 isGroupChat: false,
                 $and: [
@@ -20,18 +21,30 @@ module.exports = {
                 .populate("users", "-password")
                 .populate("latestMessage");
 
+            // Populate cho sender trong latestMessage
             chat = await User.populate(chat, {
                 path: "latestMessage.sender",
                 select: "username profile email"
             });
 
+            // Hàm chuyển Document thành Object và đảm bảo latestMessage luôn có giá trị
+            const defaultLatestMessage = {
+                _id: "",
+                sender: { _id: "", username: "", email: "", profile: "" },
+                content: "",
+                receiver: "",
+                chat: ""
+            };
+
             if (chat.length > 0) {
                 let fullChat = chat[0].toObject();
-                if (!fullChat.hasOwnProperty('latestMessage')) {
-                    fullChat.latestMessage = null;
+                // Nếu latestMessage không tồn tại hoặc là object rỗng, gán default object
+                if (!fullChat.latestMessage || Object.keys(fullChat.latestMessage).length === 0) {
+                    fullChat.latestMessage = defaultLatestMessage;
                 }
                 return res.status(200).json(fullChat);
             } else {
+                // Nếu chưa tồn tại chat, tạo mới
                 const ChatData = {
                     chatName: req.user.id,
                     isGroupChat: false,
@@ -44,10 +57,9 @@ module.exports = {
                     .populate("latestMessage");
 
                 fullChat = fullChat.toObject();
-                if (!fullChat.latestMessage) {
-                    fullChat.latestMessage = null;
+                if (!fullChat.latestMessage || Object.keys(fullChat.latestMessage).length === 0) {
+                    fullChat.latestMessage = defaultLatestMessage;
                 }
-
                 return res.status(200).json(fullChat);
             }
         } catch (error) {
