@@ -60,7 +60,7 @@ const server = app.listen(process.env.PORT || port, () => {
 const io = require('socket.io')(server, {
     pingTimeout: 60000,
     cors: {
-        origin: "https://jobappbackend-production-5db4.up.railway.app/"
+        origin: "https://job-app-production-a950.up.railway.app/"
     }
 });
 
