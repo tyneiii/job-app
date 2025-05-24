@@ -4,55 +4,68 @@ const Chat = require('../models/Chat');
 
 module.exports = {
     getAllMessage: async (req, res) => {
-        try {
-            const pageSize = 12;
-            const page = req.query.page || 1;
-            const skipMessages = (page - 1) * pageSize;
-            const messages = await Message.find({chat: req.params.id})
-                .populate('sender', 'username profile')
-                .populate('chat')
-                .sort({createdAt: -1}).limit(pageSize).skip(skipMessages);
+        const pageSize = 12;
+        const page = parseInt(req.query.page) || 1;
+        const chatId = req.params.id;
 
-            messages = await User.populate(messages, {
-                path: 'chat.users',
-                select: 'username profile email'
-            });
+        // Validate chatId
+        if (!chatId || !chatId.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).json({ error: "Invalid or missing chatId" });
+        }
+
+        try {
+            const skipMessages = (page - 1) * pageSize;
+
+            let messages = await Message.find({ chat: chatId })
+                .populate('sender', 'username profile')
+                .populate({
+                    path: 'chat',
+                    populate: {
+                        path: 'users',
+                        select: 'username profile email'
+                    }
+                })
+                .sort({ createdAt: -1 })
+                .limit(pageSize)
+                .skip(skipMessages);
 
             res.status(200).json(messages);
-            
         } catch (error) {
+            console.error("Error fetching messages:", error);
             res.status(500).json({ error: "Could not fetch messages" });
         }
     },
-    
+
+
     sendMessage: async (req, res) => {
-        const {content, chatId, receiver} = req.body;
-        
-        if(!content || !chatId){
-            console.log("Invalid data")
-            return res.status(400).json("Invalid data");
+        const { content, chatId, receiver } = req.body;
+
+        if (!content || !chatId) {
+            return res.status(400).json({ error: "Invalid data" });
         }
 
-        var newMessage = new Message({
-            sender: req.user.id,
-            content: content,
-            chat: chatId,
-            receiver: receiver
-        });
-
         try {
-            var message = await newMessage.create(newMessage);
+            let message = await Message.create({
+                sender: req.user.id,
+                content,
+                chat: chatId,
+                receiver
+            });
+
             message = await message.populate('sender', 'username profile');
             message = await message.populate('chat');
             message = await User.populate(message, {
                 path: 'chat.users',
                 select: 'username profile email'
             });
-            await Chat.findByIdAndUpdate(req.body.chatId, {latestMessage: message});
-            
+
+            await Chat.findByIdAndUpdate(chatId, { latestMessage: message });
+
             res.status(200).json(message);
         } catch (error) {
-            res.status(400).json({ error: error });
+            console.error("SendMessage Error:", error);
+            res.status(400).json({ error: error.message || "Unknown error" });
         }
     }
+
 }
