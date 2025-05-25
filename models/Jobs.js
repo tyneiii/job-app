@@ -13,7 +13,7 @@ const JobSchema = new mongoose.Schema({
     imageUrl: {type: String, required: true},
     companyId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Company',
         required: true
     },
     categoryId: {

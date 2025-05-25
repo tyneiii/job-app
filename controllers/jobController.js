@@ -55,7 +55,10 @@ module.exports = {
 
     getJob: async (req, res) => {
         try {
-            const job = await Job.findById(req.params.id).populate('categoryId', 'title');
+            const job = await Job.findById(req.params.id)
+                .populate('categoryId', 'title')
+                .populate('companyId', 'userId company');
+
             if (!job) {
                 return res.status(404).json({ message: "Job not found" });
             }
@@ -122,7 +125,10 @@ module.exports = {
 
     getCompanyJobs: async (req, res) => {
         try {
-            const companyJobs = await Job.find({ companyId: req.params.uid }).sort({ createdAt: -1 });
+            const companyJobs = await Job.find({ companyId: req.params.uid })
+                .populate('companyId', 'userId company')
+                .sort({ createdAt: -1 });
+
             res.status(200).json(companyJobs);
         }
         catch (error) {
