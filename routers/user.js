@@ -6,6 +6,8 @@ router.put('/', verifyAndAuth,  userController.updateUser);
 
 router.put('/changepassword', verifyAndAuth,  userController.changePassword);
 
+router.put('/updateprofile', verifyAndAuth,  userController.updateProfileUser);
+
 router.delete('/:id', verifyAndAuth, userController.deleteUser);
 
 router.get('/', verifyAndAuth, userController.getUser);

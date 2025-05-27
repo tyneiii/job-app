@@ -22,6 +22,40 @@ module.exports = {
         }
     },
 
+    updateProfileUser: async (req, res) => {
+    try {
+      const { username, location, phone } = req.body;
+
+        if (req.body.email) {
+            return res.status(400).json({ message: "Email is read-only and cannot be changed." });
+        }
+
+        const update = {};
+        if (username !== undefined) update.username = username;
+        if (location !== undefined) update.location = location;
+        if (phone !== undefined) update.phone = phone;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user.id,
+            { $set: update },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        const { password, __v, createdAt, updatedAt, ...userData } = updatedUser._doc;
+        res.status(200).json(userData);
+    } catch (err) {
+        if (err.code === 11000) {
+            const field = Object.keys(err.keyPattern)[0];
+            return res.status(400).json({ message: `${field} already in use.` });
+        }
+        res.status(500).json({ message: err.message });
+    }
+  },
+
     changePassword: async (req, res) => {
         const { oldPassword, newPassword } = req.body;
 
