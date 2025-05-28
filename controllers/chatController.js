@@ -1,5 +1,15 @@
 const Chat = require('../models/Chat');
 const User = require('../models/User');
+const moment = require('moment-timezone');
+
+const convertDateFields = (doc) => {
+    const obj = doc.toObject();
+    obj.createdAt = moment(obj.createdAt).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD HH:mm:ss');
+    obj.updatedAt = moment(obj.updatedAt).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD HH:mm:ss');
+    return obj;
+};
+
+const convertArrayDates = (docs) => docs.map(convertDateFields);
 
 module.exports = {
     accessChat: async (req, res) => {
@@ -23,7 +33,7 @@ module.exports = {
         });
 
         if(isChat.length > 0 ){
-            res.send(isChat[0]);
+            res.status(200).json(convertDateFields(isChat[0]));
         } else{
             var ChatData = {
                 chatName: req.user.id,
@@ -34,7 +44,7 @@ module.exports = {
             try {
                 const createdChat = await Chat.create(ChatData);
                 const FullChat = await Chat.findOne({ _id: createdChat._id }).populate("users", "-password");
-                res.status(200).json(FullChat);
+                res.status(200).json(convertDateFields(FullChat));
             } catch (error) {
                 res.status(400).json({ message: error.message });
             }
@@ -50,10 +60,10 @@ module.exports = {
                 .sort({updatedAt: -1})
                 .then(async (results) => {
                     results = await User.populate(results, {
-                        path: "lastMessage.sender",
+                        path: "latestMessage.sender",
                         select: "username profile email"
                     });
-                    res.status(200).json(results);
+                    res.status(200).json(convertArrayDates(results));
                 })
         } catch (error) {
             res.status(500).json({ message: error.message });

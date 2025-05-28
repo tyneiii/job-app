@@ -1,6 +1,16 @@
 const Message = require('../models/Message');
 const User = require('../models/User');
 const Chat = require('../models/Chat');
+const moment = require('moment-timezone');
+
+const convertDateFields = (doc) => {
+    const obj = doc.toObject();
+    obj.createdAt = moment(obj.createdAt).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD HH:mm:ss');
+    obj.updatedAt = moment(obj.updatedAt).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD HH:mm:ss');
+    return obj;
+};
+
+const convertArrayDates = (docs) => docs.map(convertDateFields);
 
 module.exports = {
     getAllMessage: async (req, res) => {
@@ -29,7 +39,7 @@ module.exports = {
                 .limit(pageSize)
                 .skip(skipMessages);
 
-            res.status(200).json(messages);
+            res.status(200).json(convertArrayDates(messages));
         } catch (error) {
             console.error("Error fetching messages:", error);
             res.status(500).json({ error: "Could not fetch messages" });
@@ -61,7 +71,7 @@ module.exports = {
 
             await Chat.findByIdAndUpdate(chatId, { latestMessage: message });
 
-            res.status(200).json(message);
+            res.status(200).json(convertDateFields(message));
         } catch (error) {
             console.error("SendMessage Error:", error);
             res.status(400).json({ error: error.message || "Unknown error" });
